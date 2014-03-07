@@ -1,47 +1,144 @@
-/* Author: Chris Wilkerson;   Created: Thu Aug 12 16:19:58 PDT 2004
- * Description: Branch predictor driver.
-*/
-
-#include <cstdio>
-#include <cstdlib>
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <stdlib.h>
+#include "predictor.h"
 #include "tread.h"
 
-// include and define the predictor
-#include "predictor.h"
-PREDICTOR predictor;
-
-// usage: predictor <trace>
-int
-main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
-    using namespace std;
+  std::fstream *traceFile = new std::fstream();
 
-    if (2 != argc) {
-        printf("usage: %s <trace>\n", argv[0]);
-        exit(EXIT_FAILURE);
+  /******************************************************************************
+   *                            PARSE COMMAND LINE ARGS
+   *****************************************************************************/
+  //Parse command line arguments
+  if (2 != argc) {
+    printf("usage: %s <trace>\n", argv[0]);
+    exit(EXIT_FAILURE);
+  }
+
+  /******************************************************************************
+   *                            PARSE TRACE FILE
+   *****************************************************************************/
+  try
+  {
+    traceFile->open(argv[1]);
+    std::string buffer;
+    std::stringstream sstream;
+    branch_record_c *branch = new branch_record_c();
+    PREDICTOR *predictor = new PREDICTOR();
+    bool prediction = false;
+    bool outcome = false;
+    uint branches = 0;
+    uint correctPredicts = 0;
+    float accuracy;
+
+    /*
+     * Format of trace file is:
+     * instr. addr. | target addr. | 4 types | outcome
+     */
+    while (!traceFile->eof())
+    {
+      // Increment branch count
+      ++branches;
+
+      // Instruction address
+      std::getline(*traceFile, buffer, ' ');
+      sstream << buffer;
+      sstream >> branch->instruction_addr;
+      sstream.str(std::string());
+      sstream.clear();
+
+      // Target address
+      std::getline(*traceFile, buffer, ' ');
+      sstream << buffer;
+      sstream >> branch->instruction_next_addr;
+      sstream.str(std::string());
+      sstream.clear();
+
+      // Is indirect?
+      std::getline(*traceFile, buffer, ' ');
+      sstream << buffer;
+      sstream >> branch->is_indirect;
+      sstream.str(std::string());
+      sstream.clear();
+
+      // Is conditional?
+      std::getline(*traceFile, buffer, ' ');
+      sstream << buffer;
+      sstream >> branch->is_conditional;
+      sstream.str(std::string());
+      sstream.clear();
+
+      // Is call?
+      std::getline(*traceFile, buffer, ' ');
+      sstream << buffer;
+      sstream >> branch->is_call;
+      sstream.str(std::string());
+      sstream.clear();
+
+      // Is return?
+      std::getline(*traceFile, buffer, ' ');
+      sstream << buffer;
+      sstream >> branch->is_return;
+      sstream.str(std::string());
+      sstream.clear();
+
+      // Outcome
+      std::getline(*traceFile, buffer, '\n');
+      sstream << buffer;
+      sstream >> outcome;
+
+      // Get prediction and update statistics
+      prediction = predictor->get_prediction(branch, NULL);
+      predictor->update_predictor(branch, NULL, outcome);
+
+      // Update the correct prediction count
+      if (prediction == outcome)
+      {
+        ++correctPredicts;
+      }
     }
 
-    cbp_trace_reader_c cbptr = cbp_trace_reader_c(argv[1]);
-    branch_record_c br;
+    // File IO is finished, so close the file
+    traceFile->close();
 
-    // read the trace, one branch at a time, placing the branch info in br
-    while (cbptr.get_branch_record(&br)) {
+    // Print summary
+    accuracy = 100 * correctPredicts / branches;
+    std::cout << std::endl;
+    std::cout << std::endl;
+    //std::cout << "__ __|  |   |  ____|       ___|   ____|  ____|   _ \\" << std::endl;
+    //std::cout << "   |    |   |  __|       \\___ \\   __|    __|    |   |" << std::endl; 
+    //std::cout << "   |    ___ |  |               |  |      |      __ <" << std::endl;   
+    //std::cout << "  _|   _|  _| _____|     _____/  _____| _____| _| \\_\\" << std::endl;  
 
-        // ************************************************************
-        // Competing predictors must have the following methods:
-        // ************************************************************
+    std::cout << "    ███        ▄█    █▄       ▄████████         ▄████████    ▄████████    ▄████████    ▄████████ " << std::endl;
+    std::cout << "▀█████████▄   ███    ███     ███    ███        ███    ███   ███    ███   ███    ███   ███    ███ " << std::endl;
+    std::cout << "   ▀███▀▀██   ███    ███     ███    █▀         ███    █▀    ███    █▀    ███    █▀    ███    ███ " << std::endl;
+    std::cout << "    ███   ▀  ▄███▄▄▄▄███▄▄  ▄███▄▄▄            ███         ▄███▄▄▄      ▄███▄▄▄      ▄███▄▄▄▄██▀ " << std::endl;
+    std::cout << "    ███     ▀▀███▀▀▀▀███▀  ▀▀███▀▀▀          ▀███████████ ▀▀███▀▀▀     ▀▀███▀▀▀     ▀▀███▀▀▀▀▀   " << std::endl;
+    std::cout << "    ███       ███    ███     ███    █▄                ███   ███    █▄    ███    █▄  ▀███████████ " << std::endl;
+    std::cout << "    ███       ███    ███     ███    ███         ▄█    ███   ███    ███   ███    ███   ███    ███ " << std::endl;
+    std::cout << "   ▄████▀     ███    █▀      ██████████       ▄████████▀    ██████████   ██████████   ███    ███ " << std::endl;
+    std::cout << "                                                                                      ███    ███ " << std::endl;
 
-        // get_prediction() returns the prediction your predictor would like to make
-        bool predicted_taken = predictor.get_prediction(&br, cbptr.osptr);
+    std::cout << std::endl;
+    std::cout << "total branches:\t\t\t" << branches << std::endl;
+    std::cout << "total correct predictions:\t" << correctPredicts << std::endl;
+    std::cout << "accuracy:\t\t\t" << accuracy << "%" <<  std::endl;
+    std::cout << std::endl;
+  }
 
-        // predict_branch() tells the trace reader how you have predicted the branch
-        bool actual_taken    = cbptr.predict_branch(predicted_taken);
-            
-        // finally, update_predictor() is used to update your predictor with the
-        // correct branch result
-        predictor.update_predictor(&br, cbptr.osptr, actual_taken);
-    }
+  catch (const std::ios_base::failure &e)
+  {
+    // Implement file not found, access denied, and !success eventually
+
+    // Ghetto file not found version
+    std::cout << "Error parsing trace file!" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  return EXIT_SUCCESS;
 }
-
-
-

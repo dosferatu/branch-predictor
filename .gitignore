@@ -15,3 +15,6 @@
 # Binary output
 predictor
 *.exe
+
+# ViM files
+.*.swp

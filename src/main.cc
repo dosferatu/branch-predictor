@@ -1,4 +1,3 @@
-#include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
 #include "predictor.h"
@@ -39,18 +38,18 @@ int main(int argc, char *argv[])
   // Handle error condition/*{{{*/
   if (!traceFile)
   {
-    cout << "Error opening trace file!" << endl;
+    printf("Error opening trace file!\n");
     return EXIT_FAILURE;
   }
 
   if (!dumpFile)
   {
-    cout << "Error opening dump file!" << endl;
+    printf("Error opening dump file!\n");
     return EXIT_FAILURE;
   }/*}}}*/
 
   /*
-   * Format of trace file is:
+   * Format of trace file line is:
    * instr. addr. | target addr. | 4 types | outcome
    */
   while ((ioError = fscanf(traceFile, "%x %x %d %d %d %d %d%c",
@@ -77,14 +76,14 @@ int main(int argc, char *argv[])
     }
 
     // Dump to trace file
-    fprintf(dumpFile, "%x %x %d %d %d %d %d\n",
-        branch->instruction_addr,
-        branch->instruction_next_addr,
-        (int) branch->is_indirect,
-        (int) branch->is_conditional,
-        (int) branch->is_call,
-        (int) branch->is_return,
-        (int) prediction);
+    ioError = fprintf(dumpFile, "%x %x %d %d %d %d %d\n", 
+       branch->instruction_addr,
+       branch->instruction_next_addr,
+       (int) branch->is_indirect,
+       (int) branch->is_conditional,
+       (int) branch->is_call,
+       (int) branch->is_return,
+       (int) prediction);
   }
 
   // File IO is finished, so close the file
@@ -95,29 +94,28 @@ int main(int argc, char *argv[])
    *                            PRINT SUMMARY
    *****************************************************************************/
   accuracy = 100 * correctPredicts / branches;
-  cout << endl;
-  cout << endl;
+  printf("\n\n");
 
-  cout << "    ███        ▄█    █▄       ▄████████         ▄████████    ▄████████    ▄████████    ▄████████ " << endl;
-  cout << "▀█████████▄   ███    ███     ███    ███        ███    ███   ███    ███   ███    ███   ███    ███ " << endl;
-  cout << "   ▀███▀▀██   ███    ███     ███    █▀         ███    █▀    ███    █▀    ███    █▀    ███    ███ " << endl;
-  cout << "    ███   ▀  ▄███▄▄▄▄███▄▄  ▄███▄▄▄            ███         ▄███▄▄▄      ▄███▄▄▄      ▄███▄▄▄▄██▀ " << endl;
-  cout << "    ███     ▀▀███▀▀▀▀███▀  ▀▀███▀▀▀          ▀███████████ ▀▀███▀▀▀     ▀▀███▀▀▀     ▀▀███▀▀▀▀▀   " << endl;
-  cout << "    ███       ███    ███     ███    █▄                ███   ███    █▄    ███    █▄  ▀███████████ " << endl;
-  cout << "    ███       ███    ███     ███    ███         ▄█    ███   ███    ███   ███    ███   ███    ███ " << endl;
-  cout << "   ▄████▀     ███    █▀      ██████████       ▄████████▀    ██████████   ██████████   ███    ███ " << endl;
-  cout << "                                                                                      ███    ███ " << endl;
+  printf("    ███        ▄█    █▄       ▄████████         ▄████████    ▄████████    ▄████████    ▄████████ \n");
+  printf("▀█████████▄   ███    ███     ███    ███        ███    ███   ███    ███   ███    ███   ███    ███ \n");
+  printf("   ▀███▀▀██   ███    ███     ███    █▀         ███    █▀    ███    █▀    ███    █▀    ███    ███ \n");
+  printf("    ███   ▀  ▄███▄▄▄▄███▄▄  ▄███▄▄▄            ███         ▄███▄▄▄      ▄███▄▄▄      ▄███▄▄▄▄██▀ \n");
+  printf("    ███     ▀▀███▀▀▀▀███▀  ▀▀███▀▀▀          ▀███████████ ▀▀███▀▀▀     ▀▀███▀▀▀     ▀▀███▀▀▀▀▀   \n");
+  printf("    ███       ███    ███     ███    █▄                ███   ███    █▄    ███    █▄  ▀███████████ \n");
+  printf("    ███       ███    ███     ███    ███         ▄█    ███   ███    ███   ███    ███   ███    ███ \n");
+  printf("   ▄████▀     ███    █▀      ██████████       ▄████████▀    ██████████   ██████████   ███    ███ \n");
+  printf("                                                                                      ███    ███ \n");
 
-  cout << endl;
-  cout << "total branches:\t\t\t" << branches << endl;
-  cout << "total correct predictions:\t" << correctPredicts << endl;
-  cout << "accuracy:\t\t\t" << accuracy << "%" <<  endl;
-  cout << endl;
+  printf("\n");
+  printf("total branches:\t\t\t%d\n", branches);
+  printf("total correct predictions:\t%d\n", correctPredicts);
+  printf("accuracy:\t\t\t%u%%\n", (unsigned int)accuracy);
+  printf("\n");
 
   // Garbage collection
   delete branch;
   delete [] newline;
   delete predictor;
 
-  return 0;
+  return EXIT_SUCCESS;
 }

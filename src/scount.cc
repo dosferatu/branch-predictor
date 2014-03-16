@@ -18,8 +18,8 @@ void SATCOUNTER::init(uint bits) {
 	scount = new uint[num_bits];
 	// initialize the counter before use to weakly taken
 	for (uint i=0; i < num_bits - 1; i++)
-		scount[i] = 0;
-	scount[num_bits - 1] = 1; 
+		scount[i] = 1;
+	scount[num_bits - 1] = 0; 
 	// initialize maximum representable number
 	max_number = pow(2, num_bits) - 1;
 }
@@ -65,7 +65,7 @@ void SATCOUNTER::decrement() {
 }
 
 // calculate and return the decimal value 
-// currently in the counter
+// currently in the counter - for debugging
 uint SATCOUNTER::get_count() {
 	uint value = 0;
 	for(uint i=0; i < num_bits; i++) 

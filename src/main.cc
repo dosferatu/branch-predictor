@@ -1,15 +1,10 @@
-#include <cstring>
-#include <fstream>
-#include <iostream>
-#include <sstream>
 #include <stdlib.h>
+#include <stdio.h>
 #include "predictor.h"
 #include "tread.h"
 
 int main(int argc, char *argv[])
 {
-  std::fstream *traceFile = new std::fstream();
-
   /******************************************************************************
    *                            PARSE COMMAND LINE ARGS
    *****************************************************************************/
@@ -22,123 +17,104 @@ int main(int argc, char *argv[])
   /******************************************************************************
    *                            PARSE TRACE FILE
    *****************************************************************************/
-  try
+  FILE *traceFile;
+  FILE *dumpFile;
+
+  branch_record_c *branch = new branch_record_c();
+  PREDICTOR *predictor = new PREDICTOR();
+  bool prediction = false;
+  bool outcome = false;
+  uint branches = 0;
+  uint correctPredicts = 0;
+  float accuracy = 0;
+  char *newline = new char[1];
+  int ioError;
+
+  // Do validation on command-line arg first
+  traceFile = fopen(argv[1], "r");
+  dumpFile = fopen("dump", "w");
+
+  // Handle error condition/*{{{*/
+  if (!traceFile)
   {
-    traceFile->open(argv[1]);
-    std::string buffer;
-    std::stringstream sstream;
-    branch_record_c *branch = new branch_record_c();
-    PREDICTOR *predictor = new PREDICTOR();
-    bool prediction = false;
-    bool outcome = false;
-    uint branches = 0;
-    uint correctPredicts = 0;
-    float accuracy;
+    printf("Error opening trace file!\n");
+    return EXIT_FAILURE;
+  }
 
-    /*
-     * Format of trace file is:
-     * instr. addr. | target addr. | 4 types | outcome
-     */
-    while (!traceFile->eof())
+  if (!dumpFile)
+  {
+    printf("Error opening dump file!\n");
+    return EXIT_FAILURE;
+  }/*}}}*/
+
+  /*
+   * Format of trace file line is:
+   * instr. addr. | target addr. | 4 types | outcome
+   */
+  while ((ioError = fscanf(traceFile, "%x %x %d %d %d %d %d%c",
+        &branch->instruction_addr,
+        &branch->instruction_next_addr,
+        (int*) &branch->is_indirect,
+        (int*) &branch->is_conditional,
+        (int*) &branch->is_call,
+        (int*) &branch->is_return,
+        (int*) &outcome,
+        newline)) != EOF)
+  {
+    // Increment branch count
+    ++branches;
+
+    // Get prediction and update statistics
+    prediction = predictor->get_prediction(branch, NULL);
+    predictor->update_predictor(branch, NULL, outcome);
+
+    // Update the correct prediction count
+    if (prediction == outcome)
     {
-      // Increment branch count
-      ++branches;
-
-      // Instruction address
-      std::getline(*traceFile, buffer, ' ');
-      sstream << buffer;
-      sstream >> branch->instruction_addr;
-      sstream.str(std::string());
-      sstream.clear();
-
-      // Target address
-      std::getline(*traceFile, buffer, ' ');
-      sstream << buffer;
-      sstream >> branch->instruction_next_addr;
-      sstream.str(std::string());
-      sstream.clear();
-
-      // Is indirect?
-      std::getline(*traceFile, buffer, ' ');
-      sstream << buffer;
-      sstream >> branch->is_indirect;
-      sstream.str(std::string());
-      sstream.clear();
-
-      // Is conditional?
-      std::getline(*traceFile, buffer, ' ');
-      sstream << buffer;
-      sstream >> branch->is_conditional;
-      sstream.str(std::string());
-      sstream.clear();
-
-      // Is call?
-      std::getline(*traceFile, buffer, ' ');
-      sstream << buffer;
-      sstream >> branch->is_call;
-      sstream.str(std::string());
-      sstream.clear();
-
-      // Is return?
-      std::getline(*traceFile, buffer, ' ');
-      sstream << buffer;
-      sstream >> branch->is_return;
-      sstream.str(std::string());
-      sstream.clear();
-
-      // Outcome
-      std::getline(*traceFile, buffer, '\n');
-      sstream << buffer;
-      sstream >> outcome;
-
-      // Get prediction and update statistics
-      prediction = predictor->get_prediction(branch, NULL);
-      predictor->update_predictor(branch, NULL, outcome);
-
-      // Update the correct prediction count
-      if (prediction == outcome)
-      {
-        ++correctPredicts;
-      }
+      ++correctPredicts;
     }
 
-    // File IO is finished, so close the file
-    traceFile->close();
-
-    // Print summary
-    accuracy = 100 * correctPredicts / branches;
-    std::cout << std::endl;
-    std::cout << std::endl;
-    //std::cout << "__ __|  |   |  ____|       ___|   ____|  ____|   _ \\" << std::endl;
-    //std::cout << "   |    |   |  __|       \\___ \\   __|    __|    |   |" << std::endl; 
-    //std::cout << "   |    ___ |  |               |  |      |      __ <" << std::endl;   
-    //std::cout << "  _|   _|  _| _____|     _____/  _____| _____| _| \\_\\" << std::endl;  
-
-    std::cout << "    ███        ▄█    █▄       ▄████████         ▄████████    ▄████████    ▄████████    ▄████████ " << std::endl;
-    std::cout << "▀█████████▄   ███    ███     ███    ███        ███    ███   ███    ███   ███    ███   ███    ███ " << std::endl;
-    std::cout << "   ▀███▀▀██   ███    ███     ███    █▀         ███    █▀    ███    █▀    ███    █▀    ███    ███ " << std::endl;
-    std::cout << "    ███   ▀  ▄███▄▄▄▄███▄▄  ▄███▄▄▄            ███         ▄███▄▄▄      ▄███▄▄▄      ▄███▄▄▄▄██▀ " << std::endl;
-    std::cout << "    ███     ▀▀███▀▀▀▀███▀  ▀▀███▀▀▀          ▀███████████ ▀▀███▀▀▀     ▀▀███▀▀▀     ▀▀███▀▀▀▀▀   " << std::endl;
-    std::cout << "    ███       ███    ███     ███    █▄                ███   ███    █▄    ███    █▄  ▀███████████ " << std::endl;
-    std::cout << "    ███       ███    ███     ███    ███         ▄█    ███   ███    ███   ███    ███   ███    ███ " << std::endl;
-    std::cout << "   ▄████▀     ███    █▀      ██████████       ▄████████▀    ██████████   ██████████   ███    ███ " << std::endl;
-    std::cout << "                                                                                      ███    ███ " << std::endl;
-
-    std::cout << std::endl;
-    std::cout << "total branches:\t\t\t" << branches << std::endl;
-    std::cout << "total correct predictions:\t" << correctPredicts << std::endl;
-    std::cout << "accuracy:\t\t\t" << accuracy << "%" <<  std::endl;
-    std::cout << std::endl;
+    // Dump to trace file
+    ioError = fprintf(dumpFile, "%x %x %d %d %d %d %d\n", 
+       branch->instruction_addr,
+       branch->instruction_next_addr,
+       (int) branch->is_indirect,
+       (int) branch->is_conditional,
+       (int) branch->is_call,
+       (int) branch->is_return,
+       (int) prediction);
   }
 
-  catch (const std::ios_base::failure &e)
-  {
-    // Implement file not found, access denied, and !success eventually
+  // File IO is finished, so close the file
+  fclose(traceFile);
+  fclose(dumpFile);
 
-    // Ghetto file not found version
-    std::cout << "Error parsing trace file!" << std::endl;
-    exit(EXIT_FAILURE);
-  }
+  /******************************************************************************
+   *                            PRINT SUMMARY
+   *****************************************************************************/
+  accuracy = 100 * correctPredicts / branches;
+  printf("\n\n");
+
+  printf("    ███        ▄█    █▄       ▄████████         ▄████████    ▄████████    ▄████████    ▄████████ \n");
+  printf("▀█████████▄   ███    ███     ███    ███        ███    ███   ███    ███   ███    ███   ███    ███ \n");
+  printf("   ▀███▀▀██   ███    ███     ███    █▀         ███    █▀    ███    █▀    ███    █▀    ███    ███ \n");
+  printf("    ███   ▀  ▄███▄▄▄▄███▄▄  ▄███▄▄▄            ███         ▄███▄▄▄      ▄███▄▄▄      ▄███▄▄▄▄██▀ \n");
+  printf("    ███     ▀▀███▀▀▀▀███▀  ▀▀███▀▀▀          ▀███████████ ▀▀███▀▀▀     ▀▀███▀▀▀     ▀▀███▀▀▀▀▀   \n");
+  printf("    ███       ███    ███     ███    █▄                ███   ███    █▄    ███    █▄  ▀███████████ \n");
+  printf("    ███       ███    ███     ███    ███         ▄█    ███   ███    ███   ███    ███   ███    ███ \n");
+  printf("   ▄████▀     ███    █▀      ██████████       ▄████████▀    ██████████   ██████████   ███    ███ \n");
+  printf("                                                                                      ███    ███ \n");
+
+  printf("\n");
+  printf("total branches:\t\t\t%d\n", branches);
+  printf("total correct predictions:\t%d\n", correctPredicts);
+  printf("accuracy:\t\t\t%u%%\n", (unsigned int)accuracy);
+  printf("\n");
+
+  // Garbage collection
+  delete branch;
+  delete [] newline;
+  delete predictor;
 
   return EXIT_SUCCESS;
 }

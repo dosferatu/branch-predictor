@@ -11,8 +11,16 @@ I. Testing Initialization
           2       4       3     4.434   11.269  9.098   Weakly taken/Strongly Global
           3       7       3     4.547   12.512  9.141   Strongly taken/Strongly Global
           * represents chosen initialization
+          Note: this was done before everything was completely tested, so it could probably be
+          rerun to verify that it really is the best optimization.
 II. Test functionality of each predictor
-    1. Local Prediction Table
+    1. While working on the patterns for each test I found that I could sufficiently test all
+       branch predictors with one longer test.  This test that shows all the expected results
+       can be found in the spreadsheet. Below are my orignal testing thoughts that turned in
+       to what I actually did that is in the spreadsheet.
+       Note: I still need to update the state transition diagrams because there was a slight
+       change that I had found after speaking with Faust that I hadn't updated and sent out.
+    2. Local Prediction Table
        a. 3-bit saturation counter works accordingly
           i. Trains to the correct pattern of prediction (initialized to weakly taken)
              1. Test that it stays taken by giving it multiple branches that will test each
@@ -30,7 +38,7 @@ II. Test functionality of each predictor
                b. Aliasing
                   i. Multiple branches go to the same sat. counter.  This is not really ideal
                      but is necessary due to constraints.
-    2. Global Prediction Table
+    3. Global Prediction Table
        a. 2-bit saturation counter works accordingly
           i. Trains to the correct pattern of prediction (initialized to weakly not taken)
              1. Test that it stays not taken by giving it multiple branches that are all actually
@@ -47,7 +55,7 @@ II. Test functionality of each predictor
                    i. NTTTNNTNTT
        b. Aliasing
           i. Multiple branches go to the same sat. counter.
-    3. Choice Prediction Table
+    4. Choice Prediction Table
        a. 2-bit saturation counter works accordingly
           i. Trains to the correct pattern of prediction (initialized to weakly local)
              1. First the path history must be preloaded to ensure it goes to the same sat
@@ -65,6 +73,3 @@ II. Test functionality of each predictor
                             takes two incorrect branches for the global predictor to switch
                             to taken it is possible to get the global predictor to predict
                             correctly before the local predictor
-    4. While working on the patterns for each test I found that I could sufficiently test all
-       branch predictors with one longer test.  This test that shows all the expected results
-       can be found in the spreadsheet.

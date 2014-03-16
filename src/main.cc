@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 
   // Garbage collection
   delete branch;
-  delete newline;
+  delete [] newline;
   delete predictor;
 
   return 0;

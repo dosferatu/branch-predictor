@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include "predictor.h"
 #include "tread.h"
-using namespace std;
 
 int main(int argc, char *argv[])
 {

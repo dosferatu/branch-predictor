@@ -1,6 +1,7 @@
 \documentclass[]{report}   % List options between brackets
 
 % List packages between braces
+\usepackage[margin=1.2in]{geometry}
 \usepackage{caption}              % Allows use of \caption* to omit ``Figure''
 \usepackage{color}
 \usepackage{enumerate}
@@ -64,13 +65,26 @@ title=\lstname}                   % show the filename of files included with \ls
 \maketitle
 
 \begin{abstract}
-  A branch predictor modeled using the Alpha 21264 microprocessor tournament predictor is simulated in software in order to demonstrate the performance of this particular technique of branch prediction. Blah blah blah blkasdlkj.
+  A branch predictor modeled using the Alpha 21264 microprocessor tournament predictor is simulated in software in order to demonstrate the performance of this particular technique of branch prediction.
+  The predictor simply makes both a local prediction and a global prediction, and uses a choice prediction that predicts which of the two prediction techniques will be correct.
 \end{abstract}
 
 \tableofcontents
 
 \chapter{Design}
-The tournament predictor being simulated chooses between blah blah blah
+A branch predictor modeled using the Alpha 21264 microprocessor tournament predictor is simulated in software in order to demonstrate the performance of this particular technique of branch prediction.
+The predictor simply makes both a local prediction and a global prediction, and uses a choice prediction that predicts which of the two prediction techniques will be correct.
+Once the branch is taken or not taken we update the prediction tables as well as the path history.
+
+\begin{figure}
+\begin{center}
+  \includegraphics[width=4.5in]{block_diagram.eps}
+\end{center}
+
+%\caption*{\small 3-bit Synchronous Up/Down Counter~\cite{counter}.}
+\caption*{\textit{Tournament predictor block diagram\cite{kessler}}}
+\label{block-diagram}
+\end{figure}
 
 \chapter{Testing}
 This is a list of branch tests

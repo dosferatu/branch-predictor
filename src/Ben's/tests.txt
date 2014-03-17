@@ -1,0 +1,75 @@
+This is a list of branch tests
+
+I. Testing Initialization
+   1. Set saturation counters to the following values and get results of tests
+      a. Global  Local  Choice  FP      INT     MM      Notes
+          0       0       0     4.816   12.407  9.795   Strongly not taken/Strongly Local
+          1       3       1     4.724   12.234  9.798   Weakly not taken/Weakly Local
+        * 2       4       0     4.433   11.253  9.094   Weakly taken/Strongly Local
+          2       4       1     4.430   11.265  9.093   Weakly taken/Weakly Local
+          2       4       2     4.431   11.279  9.093   Weakly taken/Weakly Global
+          2       4       3     4.434   11.269  9.098   Weakly taken/Strongly Global
+          3       7       3     4.547   12.512  9.141   Strongly taken/Strongly Global
+          * represents chosen initialization
+          Note: this was done before everything was completely tested, so it could probably be
+          rerun to verify that it really is the best optimization.
+II. Test functionality of each predictor
+    1. While working on the patterns for each test I found that I could sufficiently test all
+       branch predictors with one longer test.  This test that shows all the expected results
+       can be found in the spreadsheet. Below are my orignal testing thoughts that turned in
+       to what I actually did that is in the spreadsheet.
+       Note: I still need to update the state transition diagrams because there was a slight
+       change that I had found after speaking with Faust that I hadn't updated and sent out.
+    2. Local Prediction Table
+       a. 3-bit saturation counter works accordingly
+          i. Trains to the correct pattern of prediction (initialized to weakly taken)
+             1. Test that it stays taken by giving it multiple branches that will test each
+                direction of the counter of the taken side. (Assuming that if it worked on one
+                side it will work on the other also.)
+                a. Pattern for actual outcome of branch
+                   i. TTTTNNNTTTT
+                      Note: first branches tests that it goes to strongly taken.
+                      Note: next three test to see that it goes back to weakly taken.
+                   ii. Expected results are found in the spreadsheet 
+            2. Test that it switches from taken to not-taken by giving it multiple branches that
+               are first taken then not taken and back again to check both directions.
+               a. Pattern for actual outcome of branch
+                  i. NNTTTNNNN
+               b. Aliasing
+                  i. Multiple branches go to the same sat. counter.  This is not really ideal
+                     but is necessary due to constraints.
+    3. Global Prediction Table
+       a. 2-bit saturation counter works accordingly
+          i. Trains to the correct pattern of prediction (initialized to weakly not taken)
+             1. Test that it stays not taken by giving it multiple branches that are all actually
+                not taken.
+                a. Pattern needed for preloading the path history to ensure use of the same
+                   counter
+                   i. Just go with 0 everytime it goes through
+                b. Pattern for actual branch outcome
+                   i. NTNNTNNTNN
+             2. Test that it switches from not-taken to taken by giving it multiple branches that
+                are first not-taken and then taken.
+                a. Pattern for preloading path history is the same as above
+                b. Pattern for actual branch outcome
+                   i. NTTTNNTNTT
+       b. Aliasing
+          i. Multiple branches go to the same sat. counter.
+    4. Choice Prediction Table
+       a. 2-bit saturation counter works accordingly
+          i. Trains to the correct pattern of prediction (initialized to weakly local)
+             1. First the path history must be preloaded to ensure it goes to the same sat
+                counter each time.
+             2. Test that it stays local by giving it multiple branches that local would be
+                correct in its prediction and then switch to global.
+                a. Pattern for actual branch outcome
+                   i. NNNNNNTTTTTT
+             3. Test that it switches from local to global by giving it multiple branches that
+                would cause it to switch back and forth between predictors
+                a. Pattern for actual branch outcome
+                   i. NNNNTT
+                      Note: the first 4 are not taken so that it will put both 
+                            L and G predictors to strongly not taken, but because it only
+                            takes two incorrect branches for the global predictor to switch
+                            to taken it is possible to get the global predictor to predict
+                            correctly before the local predictor

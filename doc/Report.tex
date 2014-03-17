@@ -92,19 +92,18 @@ This chapter describes validation of the tournament predictor. Initialization va
 
 \section{Testing Initialization}
 Several initialization values for the saturation counters were considered, and the following is the resulting benchmarks for each initialization value:
-Set saturation counters to the following values and get results of tests\\
 
 \begin{center}
   \begin{tabular} { c c c c c c c }
     Global & Local & Choice & FP & INT & MM & Notes\\
     \hline
-      0 & 0 & 0 & 4.816 & 12.407 & 9.795 & Strongly not taken/Strongly Local\\
-      1 & 3 & 1 & 4.724 & 12.234 & 9.798 & Weakly not taken/Weakly Local\\
-      \#2 & 4 & 0 & 4.433 & 11.253 & 9.094 & Weakly taken/Strongly Local\\
-      2 & 4 & 1 & 4.430 & 11.265 & 9.093 & Weakly taken/Weakly Local\\
-      2 & 4 & 2 & 4.431 & 11.279 & 9.093 & Weakly taken/Weakly Global\\
-      2 & 4 & 3 & 4.434 & 11.269 & 9.098 & Weakly taken/Strongly Global\\
-      3 & 7 & 3 & 4.547 & 12.512 & 9.141 & Strongly taken/Strongly Global\\
+    0 & 0 & 0 & 4.816 & 12.407 & 9.795 & Strongly not taken/Strongly Local\\
+    1 & 3 & 1 & 4.724 & 12.234 & 9.798 & Weakly not taken/Weakly Local\\
+    \#2 & 4 & 0 & 4.433 & 11.253 & 9.094 & Weakly taken/Strongly Local\\
+    2 & 4 & 1 & 4.430 & 11.265 & 9.093 & Weakly taken/Weakly Local\\
+    2 & 4 & 2 & 4.431 & 11.279 & 9.093 & Weakly taken/Weakly Global\\
+    2 & 4 & 3 & 4.434 & 11.269 & 9.098 & Weakly taken/Strongly Global\\
+    3 & 7 & 3 & 4.547 & 12.512 & 9.141 & Strongly taken/Strongly Global\\
   \end{tabular}
 \end{center}
 \# represents chosen initialization

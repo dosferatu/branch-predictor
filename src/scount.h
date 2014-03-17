@@ -19,11 +19,13 @@ class SATCOUNTER
 		SATCOUNTER(uint nbits); 
 		~SATCOUNTER();
 		void increment();
-		void decrement();
-		uint get_count();
-		void reset();
-		uint get_bits();
-		uint get_sign();
+		void decrement();	
+		uint get_count();	// returns the decimal value of the current count
+		void reset();		// clears all bits of the counter
+		uint get_bits();	// returns number of bits reserved for the counter
+		uint get_sign();	// returns MSB, or a sign bit, used for decision-making
+		void set_weak0();	// clears MSB and sets all other bits - weakly not taken
+		void set_weak1();	// sets MSB and clears all other bits - weeakly taken
 };
 
 #endif	// SAT_COUNTER_SEEN

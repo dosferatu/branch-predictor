@@ -6,6 +6,7 @@
 #ifndef PREDICTOR_H_SEEN
 #define PREDICTOR_H_SEEN
 
+#define DEBUG 0
 #define PC_INDEX 0x3FF
 #define PATH_HIST 0xFFF
 #define LOCAL_PRED_SIZE 1024

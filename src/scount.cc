@@ -1,6 +1,6 @@
 #include "scount.h"
 
-// default constructor
+// default constructor makes a 2-bit counter
 SATCOUNTER::SATCOUNTER() {
 	init(2);
 }
@@ -30,8 +30,7 @@ SATCOUNTER::~SATCOUNTER() {
 	num_bits = 0;
 }
 
-// get_bits returns width of counter in
-// number of bits
+// get_bits returns number of bits allocate for the counter (width)
 uint SATCOUNTER::get_bits() {
 	return num_bits;
 }
@@ -73,11 +72,27 @@ uint SATCOUNTER::get_count() {
 	return value;
 }
 
+// reset clears all bits of the counter
 void SATCOUNTER::reset() {
 	for (uint i=0; i < num_bits; i++) 
 		scount[i] = 0;
 }
 
+// get_sign returns MSB - the sign bit, which is used for deciding take / not take
 uint SATCOUNTER::get_sign() {
 	return scount[num_bits - 1];
+}
+
+// set_weak0 clears MSB and sets all other bits: 011 (3-bit) as in weakly not taken  
+void SATCOUNTER::set_weak0() {
+	for (uint i=0; i < num_bits - 1; i++)
+		scount[i] = 1;
+	scount[num_bits - 1] = 0; 
+}
+
+// set_weak1 sets MSB and clears all other bits: 100 (3-bit) as in weakly taken  
+void SATCOUNTER::set_weak1() {
+	for (uint i=0; i < num_bits - 1; i++)
+		scount[i] = 0;
+	scount[num_bits - 1] = 1; 
 }

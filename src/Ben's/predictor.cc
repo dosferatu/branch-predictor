@@ -1,11 +1,11 @@
 /* Author: Mark Faust;   
- * Description: This file defines the two required functions for the branch predictor.
-*/
+ * Description: This file defines the two required functions for the branch predictor.  */
 
 #include "predictor.h"
 
 static const bool TAKEN = true;
 static const bool NOT_TAKEN = false;
+static const bool DEBUG = false;
 #define MAX_LOCAL_HISTORY 1024
 #define MAX_GLOBAL_HISTORY 4096
 #define MAX_CHOICE_HISTORY 4096
@@ -44,9 +44,9 @@ PREDICTOR::PREDICTOR()
 PREDICTOR::~PREDICTOR()
 {
   // Deallocate all history
-  delete LPT;
-  delete GPT;
-  delete CPT;
+  delete [] LPT;
+  delete [] GPT;
+  delete [] CPT;
 } 
 
 
@@ -57,14 +57,16 @@ bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os)
   bool LPT_prediction;
   bool GPT_prediction; 
 
-
-  printf("# %d ",iterator++);
-  printf("%0x %0x %1d %1d %1d %1d ",br->instruction_addr,     // Considered as PC, p.27 of manual
-                                    br->branch_target,
-                                    br->is_indirect,
-                                    br->is_conditional,
-                                    br->is_call,
-                                    br->is_return);
+  if (DEBUG)
+  {
+    printf("# %d ",iterator++);
+    printf("%0x %0x %1d %1d %1d %1d ",br->instruction_addr,     // Considered as PC, p.27 of manual
+        br->branch_target,
+        br->is_indirect,
+        br->is_conditional,
+        br->is_call,
+        br->is_return);
+  }
   // Perform a prediction to a branch using the given algorithm
   if (br->is_conditional || br->is_indirect)
   {
@@ -73,13 +75,19 @@ bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os)
     {
       // MSB of LPT saturation counter is 1
       LPT_prediction = TAKEN;
-      printf("Local %x     -> ", LPT[br->instruction_addr & MASK10]);
+      if (DEBUG)
+      {
+        printf("Local %x     -> ", LPT[br->instruction_addr & MASK10]);
+      }
     }
     else
     {
       // MSB of LPT saturation counter is 0
       LPT_prediction = NOT_TAKEN;
-      printf("Local  %x    -> ", LPT[br->instruction_addr & MASK10]);
+      if (DEBUG)
+      {
+        printf("Local  %x    -> ", LPT[br->instruction_addr & MASK10]);
+      }
     }
 
 
@@ -88,13 +96,19 @@ bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os)
     {
       // MSB of GPT saturation counter is 1
       GPT_prediction = TAKEN;
-      printf("Global %x    -> ", GPT[path_history & MASK12]);
+      if (DEBUG)
+      {
+        printf("Global %x    -> ", GPT[path_history & MASK12]);
+      }
     }
     else
     {
       // MSB of GPT saturation counter is 0
       GPT_prediction = NOT_TAKEN;
-      printf("Global %x    -> ", GPT[path_history & MASK12]);
+      if (DEBUG)
+      {
+        printf("Global %x    -> ", GPT[path_history & MASK12]);
+      }
     }
 
 
@@ -102,17 +116,28 @@ bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os)
     if((CPT[path_history & MASK12] & 0x2) >> 1)
     {
       prediction = GPT_prediction;
-      printf("Choice  %x   -> ", CPT[path_history & MASK12]);
+      if (DEBUG)
+      {
+        printf("Choice  %x   -> ", CPT[path_history & MASK12]);
+      }
     }
     else
     {
       prediction = LPT_prediction;
-      printf("Choice  %x   -> ", CPT[path_history & MASK12]);
+      if (DEBUG)
+      {
+        printf("Choice  %x   -> ", CPT[path_history & MASK12]);
+      }
     }
   }
   else
-    printf("Predict taken  -> ");
-  
+  {
+    if (DEBUG)
+    {
+      printf("Predict taken  -> ");
+    }
+  }
+
   return prediction;   // true for taken, false for not taken
 }
 
@@ -147,8 +172,11 @@ void PREDICTOR::update_predictor(const branch_record_c* br, const op_state_c* os
       LPT[br->instruction_addr & MASK10] = update_3bit(LPT[br->instruction_addr & MASK10], TAKEN);  // Update LPT
     GPT[path_history & MASK12]           = update_2bit(GPT[path_history & MASK12], TAKEN);          // Update GPT
     path_history                         = (((path_history << 1) | 0x1) & MASK12);// Update for new branch and mask all
-                                                                                  //  upper bits (12+)
-    printf(" -> taken\n");
+    //  upper bits (12+)
+    if (DEBUG)
+    {
+      printf(" -> taken\n");
+    }
   }
   else // The branch was not taken
   {
@@ -157,8 +185,11 @@ void PREDICTOR::update_predictor(const branch_record_c* br, const op_state_c* os
       LPT[br->instruction_addr & MASK10] = update_3bit(LPT[br->instruction_addr & MASK10], NOT_TAKEN);  // Update LPT
     GPT[path_history & MASK12]           = update_2bit(GPT[path_history & MASK12], NOT_TAKEN);          // Update GPT
     path_history                         = (((path_history << 1) | 0x0) & MASK12);// Update for new branch and mask all
-                                                                                  //  upper bits (12+)
-    printf(" -> not taken\n");
+    //  upper bits (12+)
+    if (DEBUG)
+    {
+      printf(" -> not taken\n");
+    }
   }
 }
 
@@ -252,7 +283,7 @@ void PREDICTOR::update_CPT(bool outcome)
             {} // Do nothing because it stays the same
             break;
 
-    // GPT was chosen
+            // GPT was chosen
     case 2: if(!(MSBs.gpt_msb ^ outcome) && (MSBs.lpt_msb ^ outcome))                   // GPT was correct and LPT was wrong
               CPT[path_history & MASK12] = update_2bit(current_state, TAKEN);
             else if((MSBs.gpt_msb ^ outcome) && !(MSBs.lpt_msb ^ outcome))              // GPT was wrong and LPT was correct

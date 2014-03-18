@@ -4,8 +4,8 @@
 \usepackage[margin=1.5in]{geometry}
 \usepackage{caption}              % Allows use of \caption* to omit ``Figure''
 \usepackage{color}
-\usepackage{tabu}
-\usepackage{enumerate}
+\usepackage{tabu}                 % For tables
+\usepackage{enumerate}            % List enumeration
 \usepackage{float}                % Used for H placement permission to put figures in sections properly
 \usepackage{graphicx}             % For rendering .eps images in document
 \usepackage{listings}             % Used for syntax highlighting when including source code examples
@@ -73,43 +73,87 @@ title=\lstname}                   % show the filename of files included with \ls
 \tableofcontents
 
 \chapter{Design}
-A branch predictor modeled using the Alpha 21264 microprocessor tournament predictor is simulated in software in order to demonstrate the performance of this particular technique of branch prediction.
+\par{A branch predictor modeled using the Alpha 21264 microprocessor tournament predictor is simulated in software in order to demonstrate the performance of this particular technique of branch prediction.
 The predictor simply makes both a local prediction and a global prediction, and uses a choice prediction that predicts which of the two prediction techniques will be correct.
 Once the branch is taken or not taken we update the prediction tables as well as the path history.
 The local prediction table uses a 3-bit saturation counter that is initialized to the weakly taken state.
-The global prediction table uses a 2-bit saturation counter that is initialized to the weakly not taken state.
+The global prediction table uses a 2-bit saturation counter that is initialized to the weakly not taken state.}\\\\
+Separate iterations of the tournament predictor were implemented, and we will briefly describe the design of both.
 
 \begin{center}
-  \begin{figure}
+  \begin{figure}[h]
     \label{block-diagram}
-    \includegraphics[width=4.5in]{block_diagram.eps}
+    \includegraphics[width=5in]{block_diagram.eps}
     \caption*{\textit{Tournament predictor block diagram\cite{kessler}}}
+  \end{figure}
+\end{center}
+\pagebreak
+
+\section{Implementation 1}
+\par{Since the branch prediction appeared to be built around seperate width saturation counters we develop a class called saturating counter.
+It would be able to be an arbitrary width using parameters for the constructor.
+This allowed us to test the saturating counter methods completely independent of the predictor framework.
+We built a small main function that created saturation counters of varying width, and incremented/decremented the counters in a test loop.
+Once this was completed all the predictor class needed to do was create dynamically allocated arrays of the counters with the proper widths.
+The makefile was slightly modified to include the extra source files as well.}
+
+\section{Implementation 2}
+Talk about Ben's implementation of the tournament predictor
+
+\begin{center}
+  \begin{figure}[h]
+    \label{state-machine}
+    \includegraphics[width=5in]{CPT_FSM.eps}
+    \caption*{\textit{Finite-state machine of tournament predictor}}
   \end{figure}
 \end{center}
 
 \chapter{Testing}
-This chapter describes validation of the tournament predictor. Initialization values of the saturation counters and path history are described as well as test methods.
+\par{This chapter describes validation of the tournament predictor.
+Initialization values of the saturation counters and path history are described as well as test methods.
+Both implementations will be discussed separately for what's necessary.
+Our own framework was developed in order to control debug information being printed as well as to produce trace files containing the information in each branch as well as whether our tournament predictor had predicted taken or not taken.
+Results from both implementations using a common trace file via the custom framework were the same.
+In order to verify using the trace file we disabled local history update in order to make changes in the choice \& global tables immediately observable.}
 
-\section{Testing Initialization}
+\section{Implementation 1}
+\par{Validation began with verification of the saturation counters.
+As described in the design the testing was simply to observe proper values in the counter.
+Next was to validate that each predictor was working correctly; for this we created tests that would target (or favor) a particular predictor.
+This way we could coerce a predictor all the way to the saturation point using a long string of consecutive taken or not taken values.
+The global predictor was more challenging because we needed to use a pattern that the local predictor would mispredict.
+The answer to testing the global predictor was to use a pattern of taken/not taken in alternation.}
+\par{How the path history was changing was also taken in to account during debugging of the global predictor in order to verify correct predictions of the global predictor.
+Having the path history printed out during debugging was helpful for debugging the choice predictor as well.
+Testing the choice predictor consisted of switching between using the tests for the local and global predictors.
+Due to the nature of these tests we would also be able to observe the choice predictor tending toward the predictor that was correct.
+Since these test cases were designed to isolate local or global the choice prediction would follow naturally if implemented correctly.}
+
+\section{Implementation 2}
+
+\subsection{Testing Initialization}
 Several initialization values for the saturation counters were considered, and the following is the resulting benchmarks for each initialization value:
 
 \begin{center}
-  \begin{tabular} { c c c c c c c }
-    Global & Local & Choice & FP & INT & MM & Notes\\
+  \begin{tabular} { c c c | c c c || c }
+    Local & Global & Choice & FP & INT & MM & Notes\\
     \hline
-    0 & 0 & 0 & 4.816 & 12.407 & 9.795 & Strongly not taken/Strongly Local\\
-    1 & 3 & 1 & 4.724 & 12.234 & 9.798 & Weakly not taken/Weakly Local\\
-    \#2 & 4 & 0 & 4.433 & 11.253 & 9.094 & Weakly taken/Strongly Local\\
-    2 & 4 & 1 & 4.430 & 11.265 & 9.093 & Weakly taken/Weakly Local\\
-    2 & 4 & 2 & 4.431 & 11.279 & 9.093 & Weakly taken/Weakly Global\\
-    2 & 4 & 3 & 4.434 & 11.269 & 9.098 & Weakly taken/Strongly Global\\
-    3 & 7 & 3 & 4.547 & 12.512 & 9.141 & Strongly taken/Strongly Global\\
+    0 & 0 & 0 & 4.668 & 12.795 & 9.323 & Strongly not taken/Strongly Local\\
+    3 & 1 & 0 & 4.664 & 12.774 & 9.325 & Weakly not taken/Weakly Local\\
+    3 & 1 & 1 & 4.332 & 9.589 & 8.858 & Weakly not taken/Weakly Local\\
+    4 & 1 & 1 & 4.287 & 9.877 & 9.002 & Weakly not taken/Weakly Local\\
+    4 & 2 & 0 & 4.630 & 12.662 & 9.193 & Weakly taken/Strongly Local\\
+    \#4 & 2 & 1 & 4.287 & 8.765 & 8.767 & Weakly taken/Weakly Local\\
+    4 & 2 & 2 & 4.297 & 8.722 & 8.796 & Weakly taken/Weakly Global\\
+    4 & 2 & 3 & 4.297 & 8.721 & 8.809 & Weakly taken/Strongly Global\\
+    7 & 3 & 3 & 4.318 & 8.741 & 8.834 & Strongly taken/Strongly Global\\
   \end{tabular}
 \end{center}
 \# represents chosen initialization
 
-\section{Test functionality of each predictor}
-\subsection{Local Prediction Table}
+\subsection{Test functionality of each predictor}
+\subsubsection{Local Prediction Table}
+
 \begin{itemize}
   \item{Verify that LPT stays in predict taken state by giving it multiple branches that will test each direction of the counter of the taken side. Actual outcome of branches will be TTTTNNNTTT. Predicted outcome was <insert from spreadsheet>. Note: first branches tests that it goes to strongly taken; next three test to see that it goes back to weakly taken.}
 
@@ -117,7 +161,7 @@ Several initialization values for the saturation counters were considered, and t
     are first taken then not taken and back again to check both directions. Actual outcome of branches will be NNTTTNNNN. Predicted outcome was <insert from spreadsheet>. Note multiple branches go to the same saturation counter. This is not really ideal but is necessary due to constraints.}
 \end{itemize}
 
-\subsection{Global Prediction Table}
+\subsubsection{Global Prediction Table}
 The path history must be preloaded to ensure it goes to the same sat counter each time.
 
 \begin{enumerate}
@@ -134,7 +178,7 @@ The path history must be preloaded to ensure it goes to the same sat counter eac
     \end{itemize}
 \end{enumerate}
 
-\subsection{Choice Prediction Table}
+\subsubsection{Choice Prediction Table}
 The path history must be preloaded to ensure it goes to the same saturation counter each time.
 \begin{enumerate}
   \item{Test that it stays local by giving it multiple branches that local would be correct in its prediction and then switch to global.}
@@ -155,8 +199,12 @@ Note: the first 4 are not taken so that it will put both L and G predictors to s
 \lstinputlisting{../src/main.cc}
 \pagebreak
 
-\section{predictor.cc}
-\lstinputlisting{../src/predictor.cc}
+\section{Implementation 1 predictor.cc}
+\lstinputlisting{../src/AKs/predictor.cc}
+\pagebreak
+
+\section{Implementation 2 predictor.cc}
+\lstinputlisting{../src/Ben's/predictor.cc}
 \pagebreak
 
 \bibliographystyle{plain}

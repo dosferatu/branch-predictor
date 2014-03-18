@@ -1,5 +1,9 @@
-/* Author: Mark Faust;   
- * Description: This file defines the two required functions for the branch predictor.
+/* predictor.cc   
+ * Description: This file implements the two required functions for the branch predictor.
+ *
+ * Andrei Kniazev, Michael Walton, Kevin Bedrossian, Benjamin Huntsman
+ * ECE 486/586 final project
+ * March 19, 2014
  */
 
 #include "predictor.h"

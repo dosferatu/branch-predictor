@@ -9,9 +9,9 @@ static const bool DEBUG = false;
 #define MAX_LOCAL_HISTORY 1024
 #define MAX_GLOBAL_HISTORY 4096
 #define MAX_CHOICE_HISTORY 4096
-#define DEFAULT_LOCAL   4
-#define DEFAULT_GLOBAL  2
-#define DEFAULT_CHOICE  0
+#define DEFAULT_LOCAL   3
+#define DEFAULT_GLOBAL  1
+#define DEFAULT_CHOICE  1
 #define MASK10 0x3FF
 #define MASK12 0xFFF
 

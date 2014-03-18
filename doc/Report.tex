@@ -98,8 +98,8 @@ Once this was completed all the predictor class needed to do was create dynamica
 The makefile was slightly modified to include the extra source files as well.}
 
 \section{Implementation 2}
-Talk about Ben's implementation of the tournament predictor
-
+\par{Dynamically allocated arrays of integers used as saturation counters are utilized for each of the predictor units.
+Each predictor type, local, global, and choice (tournament) has its own function for updating it to the appropriate value based on its particular conditions.}<++>
 \begin{center}
   \begin{figure}[h]
     \label{state-machine}
@@ -109,14 +109,14 @@ Talk about Ben's implementation of the tournament predictor
 \end{center}
 
 \chapter{Testing}
-\par{This chapter describes validation of the tournament predictor.
+\par{This chapter describes validation of the each predictor.
 Initialization values of the saturation counters and path history are described as well as test methods.
 Both implementations will be discussed separately for what's necessary.
 Our own framework was developed in order to control debug information being printed as well as to produce trace files containing the information in each branch as well as whether our tournament predictor had predicted taken or not taken.
 Results from both implementations using a common trace file via the custom framework were the same.
 In order to verify using the trace file we disabled local history update in order to make changes in the choice \& global tables immediately observable.}
 
-\section{Implementation 1}
+\section{Implementation 1} 
 \par{Validation began with verification of the saturation counters.
 As described in the design the testing was simply to observe proper values in the counter.
 Next was to validate that each predictor was working correctly; for this we created tests that would target (or favor) a particular predictor.
@@ -129,7 +129,10 @@ Testing the choice predictor consisted of switching between using the tests for 
 Due to the nature of these tests we would also be able to observe the choice predictor tending toward the predictor that was correct.
 Since these test cases were designed to isolate local or global the choice prediction would follow naturally if implemented correctly.}
 
-\section{Implementation 2}
+\section{Implementation 2} 
+\par{Each of local and global predictors were validated separtely first for funcationality.  
+Then together with the tournament predictor to determine proper funcationality for the tournament predictor.
+Each branch possibility is tested to ensure proper functionality.}
 
 \subsection{Testing Initialization}
 Several initialization values for the saturation counters were considered, and the following is the resulting benchmarks for each initialization value:
@@ -150,17 +153,17 @@ Several initialization values for the saturation counters were considered, and t
   \end{tabular}
 \end{center}
 \# represents chosen initialization
-
+ 
 \subsection{Test functionality of each predictor}
 \subsubsection{Local Prediction Table}
 
 \begin{itemize}
-  \item{Verify that LPT stays in predict taken state by giving it multiple branches that will test each direction of the counter of the taken side. Actual outcome of branches will be TTTTNNNTTT. Predicted outcome was <insert from spreadsheet>. Note: first branches tests that it goes to strongly taken; next three test to see that it goes back to weakly taken.}
-
+  \item{Verify that LPT stays in predict taken state by giving it multiple branches that will test each direction of the counter of the taken side. Actual outcome of branches will be TTTTNNNTTT. Predicted outcome was that each state would be seen. Note: first branches tests that it goes to strongly taken; next three test to see that it goes back to weakly taken.}
+ 
   \item{Test that it switches from taken to not-taken by giving it multiple branches that
-    are first taken then not taken and back again to check both directions. Actual outcome of branches will be NNTTTNNNN. Predicted outcome was <insert from spreadsheet>. Note multiple branches go to the same saturation counter. This is not really ideal but is necessary due to constraints.}
+     are first taken then not taken and back again to check both directions. Actual outcome of branches will be NNTTTNNNN. Predicted outcome was that it would move through all states of the predictory. Note multiple branches go to the same saturation counter. This is not really ideal but is necessary due to constraints.}
 \end{itemize}
-
+ 
 \subsubsection{Global Prediction Table}
 The path history must be preloaded to ensure it goes to the same sat counter each time.
 
@@ -169,31 +172,24 @@ The path history must be preloaded to ensure it goes to the same sat counter eac
 
     \begin{itemize}
       \item{The pattern needed for preloading the path history to ensure use of the same counter will be to just use 0 every time it goes through}
-      \item{Pattern for actual branch outcome will be NTNNTNNTNN. Predicted output was <insert from spreadsheet>.}
-    \end{itemize}
-  \item{Test that it switches from not-taken to taken by giving it multiple branches that are first not-taken and then taken.}
+      \item{Pattern for actual branch outcome will be NTNNTNNTNN. Predicted output is that it stays as not taken.}
+     \end{itemize}
+   \item{Test that it switches from not-taken to taken by giving it multiple branches that are first not-taken and then taken.}
     \begin{itemize}
-      \item{Pattern for preloading path history is the same as above. Predicted output was <insert from spreadsheet>.}
-      \item{Pattern for actual branch outcome will be NTTTNNTNTT. Predicted output was <insert from spreadsheet>.}
+      \item{Pattern for preloading path history is the same as above. Predicted output is that it moves through all states of the predictor.}
+      \item{Pattern for actual branch outcome will be NTTTNNTNTT.
     \end{itemize}
 \end{enumerate}
-
+ 
 \subsubsection{Choice Prediction Table}
 The path history must be preloaded to ensure it goes to the same saturation counter each time.
 \begin{enumerate}
-  \item{Test that it stays local by giving it multiple branches that local would be correct in its prediction and then switch to global.}
-    \begin{itemize}
-      \item{Pattern for actual branch outcome is NNNNNNTTTTTT. Predicted output was <insert from spreadsheet>.}
-    \end{itemize}
-  \item{Test that it switches from local to global by giving it multiple branches that would cause it to switch back and forth between predictors}
-    \begin{itemize}
-      \item{Pattern for actual branch outcome is NNNNTT. Predicted output was <insert from spreadsheet>.}
-    \end{itemize}
+  \item{This test is accomplished by preloading the path history to ensure that a single saturation counter is index for each branch used in the test.
+   The final test is actually conclusive in how it tests all predictors with a single test.}
 \end{enumerate}
 
-Note: the first 4 are not taken so that it will put both L and G predictors to strongly not taken, but because it only takes two incorrect branches for the global predictor to switch to taken it is possible to get the global predictor to predict correctly before the local predictor.
 
-
+ 
 \chapter{Source Code}
 \section{main.cc}
 \lstinputlisting{../src/main.cc}
